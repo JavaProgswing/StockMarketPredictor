@@ -24,13 +24,13 @@ args = parser.parse_args()
 show_browser = args.showBrowser
 profile = profiles.Windows()
 options = webdriver.ChromeOptions()
-if show_browser:
+if not show_browser:
     options.add_argument("--headless=new")
 
 driver = Chrome(
     profile,
     options=options,
-    uc_driver=True,
+    uc_driver=False,
 )
 
 
@@ -231,7 +231,7 @@ def get_chatgpt_response(prompt):
         pass
 
     try:
-        if EC.url_contains("https://auth.openai.com"):
+        if "https://auth.openai.com" in driver.current_url:
             # Click on "Continue with Google"
             google_button = WebDriverWait(driver, 10).until(
                 EC.element_to_be_clickable(
@@ -321,7 +321,7 @@ except ChatGPTAuthWallException:
     print(
         "\rError: Couldn't get a response from ChatGPT due to unsuccessful auth-wall bypass."
     )
-    driver.quit()
+    
     sys.exit(1)
 flag.set()
 print(f"\rResponse: {response}")
