@@ -231,49 +231,52 @@ def get_chatgpt_response(prompt):
         pass
 
     try:
-        # Click on "Continue with Google"
-        google_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "//button[.//span[text()='Continue with Google']]")
+        if EC.url_contains("https://auth.openai.com"):
+            # Click on "Continue with Google"
+            google_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, "//button[.//span[text()='Continue with Google']]")
+                )
             )
-        )
-        google_button.click()
+            google_button.click()
 
-        # Switch to Google login page
-        # Wait for the email input field and fill it
-        email_input = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, "identifierId"))
-        )
-        WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.ID, "identifierId"))
-        )
-        email_input.send_keys(STORED_EMAIL_ID)
-
-        # Click "Next" after entering email
-        next_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "//span[text()='Next']/ancestor::button")
+            # Switch to Google login page
+            # Wait for the email input field and fill it
+            email_input = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.ID, "identifierId"))
             )
-        )
-        next_button.click()
-
-        # Wait for the password input field and fill it
-        password_input = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.NAME, "Passwd"))
-        )
-        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.NAME, "Passwd")))
-        password_input.send_keys(STORED_EMAIL_PASS)
-
-        # Click "Next" after entering the password
-        next_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "//span[text()='Next']/ancestor::button")
+            WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.ID, "identifierId"))
             )
-        )
-        next_button.click()
+            email_input.send_keys(STORED_EMAIL_ID)
 
-        # Wait for the page to redirect back to ChatGPT
-        WebDriverWait(driver, 10).until(EC.url_contains("https://chatgpt.com"))
+            # Click "Next" after entering email
+            next_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, "//span[text()='Next']/ancestor::button")
+                )
+            )
+            next_button.click()
+
+            # Wait for the password input field and fill it
+            password_input = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.NAME, "Passwd"))
+            )
+            WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.NAME, "Passwd"))
+            )
+            password_input.send_keys(STORED_EMAIL_PASS)
+
+            # Click "Next" after entering the password
+            next_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, "//span[text()='Next']/ancestor::button")
+                )
+            )
+            next_button.click()
+
+            # Wait for the page to redirect back to ChatGPT
+            WebDriverWait(driver, 10).until(EC.url_contains("https://chatgpt.com"))
     except TimeoutException:
         raise ChatGPTAuthWallException("Authentication failed.")
     return get_prompt_response(prompt)
@@ -314,8 +317,9 @@ print_progress("Waiting for ChatGPT response", flag)
 try:
     response = get_chatgpt_response(prompt)
 except ChatGPTAuthWallException:
+    flag.set()
     print(
-        "Error: Couldn't get a response from ChatGPT due to unsuccessful auth-wall bypass."
+        "\rError: Couldn't get a response from ChatGPT due to unsuccessful auth-wall bypass."
     )
     driver.quit()
     sys.exit(1)
