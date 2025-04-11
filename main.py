@@ -30,7 +30,7 @@ if not show_browser:
 driver = Chrome(
     profile,
     options=options,
-    uc_driver=False,
+    uc_driver=True,
 )
 
 
@@ -242,16 +242,16 @@ def get_chatgpt_response(prompt):
 
             # Switch to Google login page
             # Wait for the email input field and fill it
-            email_input = WebDriverWait(driver, 10).until(
+            email_input = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.ID, "identifierId"))
             )
-            WebDriverWait(driver, 10).until(
+            WebDriverWait(driver, 20).until(
                 EC.element_to_be_clickable((By.ID, "identifierId"))
             )
             email_input.send_keys(STORED_EMAIL_ID)
 
             # Click "Next" after entering email
-            next_button = WebDriverWait(driver, 10).until(
+            next_button = WebDriverWait(driver, 20).until(
                 EC.element_to_be_clickable(
                     (By.XPATH, "//span[text()='Next']/ancestor::button")
                 )
@@ -259,16 +259,16 @@ def get_chatgpt_response(prompt):
             next_button.click()
 
             # Wait for the password input field and fill it
-            password_input = WebDriverWait(driver, 10).until(
+            password_input = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.NAME, "Passwd"))
             )
-            WebDriverWait(driver, 10).until(
+            WebDriverWait(driver, 20).until(
                 EC.element_to_be_clickable((By.NAME, "Passwd"))
             )
             password_input.send_keys(STORED_EMAIL_PASS)
 
             # Click "Next" after entering the password
-            next_button = WebDriverWait(driver, 10).until(
+            next_button = WebDriverWait(driver, 20).until(
                 EC.element_to_be_clickable(
                     (By.XPATH, "//span[text()='Next']/ancestor::button")
                 )
@@ -276,8 +276,19 @@ def get_chatgpt_response(prompt):
             next_button.click()
 
             # Wait for the page to redirect back to ChatGPT
-            WebDriverWait(driver, 10).until(EC.url_contains("https://chatgpt.com"))
-    except TimeoutException:
+            WebDriverWait(driver, 20).until(EC.url_contains("https://chatgpt.com"))
+    except TimeoutException as e:
+        import traceback
+
+        def get_traceback(error):
+            etype = type(error)
+            trace = error.__traceback__
+            lines = traceback.format_exception(etype, error, trace)
+            traceback_text = "".join(lines)
+            return traceback_text
+
+        traceback_text = get_traceback(e)
+        print(f"Error: {traceback_text}")
         raise ChatGPTAuthWallException("Authentication failed.")
     return get_prompt_response(prompt)
 
@@ -319,9 +330,9 @@ try:
 except ChatGPTAuthWallException:
     flag.set()
     print(
-        "\rError: Couldn't get a response from ChatGPT due to unsuccessful auth-wall bypass."
+        "\rError: Couldn't get a response from ChatGPT due to unsuccessful login, disable 2FA."
     )
-    
+
     sys.exit(1)
 flag.set()
 print(f"\rResponse: {response}")
