@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockSentinel: AI-Powered Market Intelligence</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom right, #1a202c, #2d3748);
+            color: white;
+        }
+        header, footer {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(to right, #4f46e5, #14b8a6, #06b6d4);
+            color: white;
+        }
+        header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        header p {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        .btn {
+            background: white;
+            color: #1e293b;
+            padding: 0.75rem 2rem;
+            border-radius: 9999px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s;
+            border: none;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        .features, .dashboard {
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        .card-container {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            max-width: 1000px;
+            margin: auto;
+        }
+        .card {
+            background: #1e293b;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            transition: background 0.3s;
+        }
+        .card:hover {
+            background: #334155;
+        }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .tab-button {
+            background: #14b8a6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .tab-button:hover {
+            background: #0d9488;
+        }
+        .tab-content {
+            background: #1e293b;
+            padding: 2rem;
+            max-width: 800px;
+            margin: auto;
+            border-radius: 0.75rem;
+            display: none;
+            white-space: pre-wrap;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        footer a {
+            color: #94a3b8;
+            text-decoration: underline;
+        }
+        .geopolitics-info {
+            background: linear-gradient(to right, #4f46e5, #14b8a6);
+            padding: 2rem;
+            border-radius: 1rem;
+            margin: 2rem auto;
+            max-width: 800px;
+            color: #fff;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        .geopolitics-info h2 {
+            margin-bottom: 1rem;
+        }
+        .geopolitics-info ul {
+            text-align: left;
+            margin: 1rem 0;
+            padding-left: 1.2rem;
+        }
+        .geopolitics-info li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>StockSentinel: AI-Powered Market Intelligence</h1>
+    <p>Dive into the stock market with real-time data, curated news, and AI-driven insights.</p>
+    <button class="btn" onclick="handleTryNow()">Try It Now</button>
+</header>
+
+<section class="features">
+    <div class="card-container">
+        <div class="card">
+            <h3>Live Market Data</h3>
+            <p>Stay up-to-date with dynamic stock metrics like price, change, volume, and 52-week range.</p>
+        </div>
+        <div class="card">
+            <h3>Curated News</h3>
+            <p>Get the most relevant headlines that influence market movements from trusted sources.</p>
+        </div>
+        <div class="card">
+            <h3>AI Insights</h3>
+            <p>Understand deeper patterns and projections via ChatGPT-backed summaries.</p>
+        </div>
+    </div>
+</section>
+
+<section class="dashboard">
+    <h2>Live Dashboard</h2>
+    <div class="tabs">
+        <button class="tab-button" onclick="loadTab('market')">Market</button>
+        <button class="tab-button" onclick="loadTab('news')">News</button>
+        <button class="tab-button" onclick="loadTab('ai')">AI Insights</button>
+    </div>
+    <div id="market" class="tab-content active">Loading Market Data...</div>
+    <div id="news" class="tab-content">Loading News...</div>
+    <div id="ai" class="tab-content">Loading AI Insights...</div>
+</section>
+
+<section id="try-info" class="geopolitics-info" style="display: none;">
+    <h2>How Geopolitics Impacts the Stock Market</h2>
+    <p>The stock market and geopolitics are deeply intertwined, as global events and political decisions can significantly impact investor sentiment, market stability, and economic growth.</p>
+    <h3>How Geopolitics Influences the Stock Market</h3>
+    <ul>
+        <li><strong>Market Volatility</strong> – Political instability, wars, and diplomatic tensions create uncertainty, leading to sharp fluctuations in stock prices.</li>
+        <li><strong>Trade Wars & Sanctions</strong> – Tariffs and economic restrictions affect industries reliant on international trade, impacting stock valuations.</li>
+        <li><strong>Currency Fluctuations</strong> – Political instability can weaken a country’s currency, affecting multinational corporations and stock markets.</li>
+        <li><strong>Interest Rate & Monetary Policies</strong> – Central banks adjust interest rates based on geopolitical risks, influencing investor behavior.</li>
+        <li><strong>Supply Chain Disruptions</strong> – Conflicts and trade restrictions disrupt global supply chains, affecting industries like technology, manufacturing, and energy.</li>
+    </ul>
+    <h3>Examples of Geopolitical Events Affecting Stock Markets</h3>
+    <ul>
+        <li><strong>Russia-Ukraine Conflict (2022)</strong> – Led to disruptions in global energy markets, causing oil and gas prices to surge and affecting stock indices worldwide.</li>
+        <li><strong>Brexit Vote (2016)</strong> – The UK’s decision to leave the EU triggered market turmoil, with the British pound falling sharply and European stocks experiencing losses.</li>
+        <li><strong>9/11 Terrorist Attacks (2001)</strong> – Caused a sharp decline in U.S. stock markets, with the Dow Jones Industrial Average dropping over 7%.</li>
+        <li><strong>Cuban Missile Crisis (1962)</strong> – The S&P 500 declined more than 6% due to tensions between the U.S. and the Soviet Union.</li>
+        <li><strong>U.S.-China Trade War</strong> – Ongoing trade negotiations between the two largest economies have led to market uncertainty and fluctuations in tech and manufacturing stocks.</li>
+    </ul>
+</section>
+
+<footer>
+    © 2025 StockSentinel AI. All rights reserved. |
+    <a href="#">GitHub</a> |
+    <a href="#">Privacy Policy</a>
+  </footer>
+
+  <script>
+    function handleTryNow() {
+      document.getElementById("try-info").style.display = "block";
+      document.getElementById("try-info").scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function loadTab(tabId) {
+      ['market', 'news', 'ai'].forEach(id => {
+        const el = document.getElementById(id);
+        el.classList.remove('active');
+        el.innerHTML = `Loading ${id.charAt(0).toUpperCase() + id.slice(1)}...`;
+      });
+
+      const el = document.getElementById(tabId);
+      el.classList.add('active');
+
+      try {
+        const response = await fetch(`/api/${tabId}`);
+        console.log(response);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.text();
+        el.innerHTML = `<pre>${data}</pre>`;
+      } catch (error) {
+        el.innerHTML = `<p style="color: red;">Failed to load ${tabId} data. Please try again later.</p>`;
+        console.error('Error fetching data:', error);
+      }
+    }
+
+    window.onload = () => {
+      loadTab('ai');
+    };
+  </script>
+</body>
+</html>

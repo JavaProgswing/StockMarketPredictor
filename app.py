@@ -1,127 +1,30 @@
+import asyncio
+from quart import Quart, render_template
+from concurrent.futures import ThreadPoolExecutor
+
 from selenium_profiles.webdriver import Chrome
 from selenium_profiles.profiles import profiles
 from selenium.webdriver.common.by import By
-from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
-import argparse
+from selenium.common.exceptions import TimeoutException
+from selenium import webdriver
+
 import time
-import base64
 import json
 import os
+import base64
 
-options = webdriver.ChromeOptions()
-parser = argparse.ArgumentParser(
-    description="A script to get stock and news info and calculate rise/fall."
-)
-parser.add_argument(
-    "-showBrowser", action="store_true", help="Show browser if this flag is passed"
-)
+# Initialize app and executor
+app = Quart(__name__)
+executor = ThreadPoolExecutor()
 
-args = parser.parse_args()
-show_browser = args.showBrowser
+# Init driver once
 profile = profiles.Windows()
 options = webdriver.ChromeOptions()
-if not show_browser:
-    options.add_argument("--headless=new")
-
-driver = Chrome(
-    profile,
-    options=options,
-    uc_driver=True,
-)
-
-
-def get_news():
-    news = ""
-    driver.get("https://news.google.com/topstories")
-    WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, "article"))
-    )
-
-    def scroll_down(repeat=3):
-        body = driver.find_element(By.TAG_NAME, "body")
-        for _ in range(repeat):
-            body.send_keys(Keys.END)
-
-    scroll_down(repeat=5)
-
-    articles = driver.find_elements(By.CSS_SELECTOR, "article")
-
-    for article in articles:
-        try:
-            title_elem = article.find_element(By.CSS_SELECTOR, "a.gPFEn")
-            # source_elem = article.find_element(By.CSS_SELECTOR, "div.vr1PYe")
-            # time_elem = article.find_element(By.CSS_SELECTOR, "time.hvbAAd")
-
-            title = title_elem.text.strip()
-            # link = title_elem.get_attribute("href")
-            # source = source_elem.text.strip()
-            # time_ago = time_elem.text.strip()
-
-            news = news + f"{title}\n"
-        except Exception:
-            continue
-    return news
-
-
-def get_stock_info():
-    stock_info = ""
-    driver.get("https://www.cnn.com/markets")
-
-    wait = WebDriverWait(driver, 15)
-    wait.until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, ".basic-table__entry-1UF7dk"))
-    )
-
-    rows = driver.find_elements(By.CSS_SELECTOR, ".basic-table__entry-1UF7dk")
-
-    for row in rows:
-        try:
-            ticker_el = row.find_elements(By.CSS_SELECTOR, ".ticker a")
-            company_el = row.find_elements(By.CSS_SELECTOR, ".title-column span")
-            price_el = row.find_elements(
-                By.CSS_SELECTOR, ".basic-table__price-container-1xrkt9 span"
-            )
-            change_el = row.find_elements(
-                By.CSS_SELECTOR, ".basic-table__change-1zbRwI span"
-            )
-            volume_el = row.find_elements(
-                By.CSS_SELECTOR, ".basic-table__volume-3V90t3"
-            )
-            low52_el = row.find_elements(By.CSS_SELECTOR, ".low__text")
-            high52_el = row.find_elements(By.CSS_SELECTOR, ".high__text")
-
-            if not (
-                ticker_el
-                and company_el
-                and price_el
-                and change_el
-                and volume_el
-                and low52_el
-                and high52_el
-            ):
-                continue
-
-            ticker = ticker_el[0].text
-            company = company_el[0].text
-            price = price_el[0].text
-            change = change_el[0].text
-            percent = change_el[1].text if len(change_el) > 1 else ""
-            volume = volume_el[0].text
-            low52 = low52_el[0].text
-            high52 = high52_el[0].text
-
-            stock_info = (
-                stock_info
-                + f"{ticker}: {company}\nPrice: {price} | Change: {change} | % Change: {percent}\nVolume: {volume} | 52W Range: {low52} - {high52}"
-            )
-        except Exception:
-            continue
-    return stock_info
-
+options.add_argument("--headless=new")
+driver = Chrome(profile, options=options, uc_driver=True)
 
 CONFIG_FILE = "config.json"
 
@@ -141,7 +44,7 @@ def load_or_create_config():
                     print("Config file is missing required fields.")
             except json.JSONDecodeError:
                 print("Error decoding JSON. Creating a new config.")
-            except (base64.binascii.Error, UnicodeDecodeError) as e:
+            except (base64.binascii.Error, UnicodeDecodeError):
                 # Print any errors that occur during decoding
                 print("Error decoding password. Creating a new config.")
     # If file doesn't exist or is invalid, create a new one
@@ -160,6 +63,57 @@ def load_or_create_config():
 
 
 STORED_EMAIL_ID, STORED_EMAIL_PASS = load_or_create_config()
+
+
+def get_news():
+    news = ""
+    driver.get("https://news.google.com/topstories")
+    WebDriverWait(driver, 15).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "article"))
+    )
+    body = driver.find_element(By.TAG_NAME, "body")
+    for _ in range(5):
+        body.send_keys(Keys.END)
+        time.sleep(0.5)
+    articles = driver.find_elements(By.CSS_SELECTOR, "article")
+    for article in articles:
+        try:
+            title_elem = article.find_element(By.CSS_SELECTOR, "a.gPFEn")
+            news += f"{title_elem.text.strip()}\n"
+        except:
+            continue
+    return news.strip()
+
+
+def get_stock_info():
+    stock_info = ""
+    driver.get("https://www.cnn.com/markets")
+    WebDriverWait(driver, 15).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, ".basic-table__entry-1UF7dk"))
+    )
+    rows = driver.find_elements(By.CSS_SELECTOR, ".basic-table__entry-1UF7dk")
+    for row in rows:
+        try:
+            ticker = row.find_element(By.CSS_SELECTOR, ".ticker a").text
+            company = row.find_element(By.CSS_SELECTOR, ".title-column span").text
+            price = row.find_element(
+                By.CSS_SELECTOR, ".basic-table__price-container-1xrkt9 span"
+            ).text
+            change_els = row.find_elements(
+                By.CSS_SELECTOR, ".basic-table__change-1zbRwI span"
+            )
+            change = change_els[0].text
+            percent = change_els[1].text if len(change_els) > 1 else ""
+            volume = row.find_element(
+                By.CSS_SELECTOR, ".basic-table__volume-3V90t3"
+            ).text
+            low52 = row.find_element(By.CSS_SELECTOR, ".low__text").text
+            high52 = row.find_element(By.CSS_SELECTOR, ".high__text").text
+
+            stock_info += f"{ticker}: {company} | Price: {price} | Change: {change} | %: {percent} | Volume: {volume} | 52W: {low52}-{high52}\n"
+        except:
+            continue
+    return stock_info.strip()
 
 
 class ChatGPTAuthWallException(Exception):
@@ -293,46 +247,37 @@ def get_chatgpt_response(prompt):
     return get_prompt_response(prompt)
 
 
-import threading
-import time
-import sys
+# Async wrappers
+async def run_blocking(func, *args):
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(executor, lambda: func(*args))
 
 
-def print_progress(text: str, done_flag: threading.Event):
-    def run():
-        start_time = time.time()
-        while not done_flag.is_set():
-            elapsed = int(time.time() - start_time)
-            sys.stdout.write(f"\r{text} - {elapsed}s")
-            sys.stdout.flush()
-            time.sleep(1)
-
-    threading.Thread(target=run, daemon=True).start()
+@app.route("/")
+async def index():
+    return await render_template("index.html")
 
 
-flag = threading.Event()
-print_progress("Waiting for stock market info", flag)
-stock_info = get_stock_info()
-flag.set()
-print(f"\rStock info: {stock_info}")
+@app.route("/api/news")
+async def news_endpoint():
+    return await run_blocking(get_news)
 
-flag = threading.Event()
-print_progress("Waiting for latest news", flag)
-news = get_news()
-flag.set()
-print(f"\rNews: {news}")
 
-prompt = f"Stock market: {stock_info}\n\nNews: {news}\n\nBased on the above information summarize the rise/fall percentages of stock market."
-flag = threading.Event()
-print_progress("Waiting for ChatGPT response", flag)
-try:
-    response = get_chatgpt_response(prompt)
-except ChatGPTAuthWallException:
-    flag.set()
-    print(
-        "\rError: Couldn't get a response from ChatGPT due to unsuccessful login, disable 2FA."
-    )
+@app.route("/api/market")
+async def stocks_endpoint():
+    return await run_blocking(get_stock_info)
 
-    sys.exit(1)
-flag.set()
-print(f"\rResponse: {response}")
+
+@app.route("/api/ai")
+async def summary_endpoint():
+    stock_info = await run_blocking(get_stock_info)
+    news = await run_blocking(get_news)
+    if not stock_info or not news:
+        return "No data available", 500
+    prompt = f"Stock market: {stock_info}\n\nNews: {news}\n\nSummarize rise/fall."
+    response: str = await run_blocking(get_chatgpt_response, prompt)
+    return response.replace(".", ".\n")
+
+
+if __name__ == "__main__":
+    app.run(port=80)
